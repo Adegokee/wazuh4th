@@ -1,0 +1,25 @@
+filebeat.inputs:
+  - type: log
+    paths:
+      - /var/log/nginx/access.log
+      - /var/log/nginx/error.log
+    fields:
+      service: nginx
+    fields_under_root: true
+
+  - type: log
+    paths:
+      - /var/ossec/logs/alerts/alerts.json
+    fields:
+      service: wazuh
+    fields_under_root: true
+    json.keys_under_root: true
+    json.add_error_key: true
+
+output.elasticsearch:
+  hosts: ["https://${INDEXER_HOST}:${INDEXER_PORT}"]
+  username: "${ELASTIC_USER}"
+  password: "${ELASTIC_PASSWORD}"
+  ssl.certificate_authorities: ["/etc/ssl/root-ca.pem"]
+  ssl.certificate: "/etc/ssl/filebeat.pem"
+  ssl.key: "/etc/ssl/filebeat.key"
