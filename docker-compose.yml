@@ -8,7 +8,7 @@ services:
       - certs:/certs
     entrypoint: /bin/sh
     command: -c "
-    
+
       apk add --no-cache openssl &&
       cd /certs &&
       if [ ! -f root-ca.pem ]; then
@@ -134,18 +134,17 @@ services:
     user: root
     restart: always
     volumes:
-      # Filebeat configuration
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      # Certificates for TLS
-      - ./certs/root-ca.pem:/etc/ssl/root-ca.pem:ro
-      - ./certs/filebeat.pem:/etc/ssl/filebeat.pem:ro
-      - ./certs/filebeat.key:/etc/ssl/filebeat.key:ro
       # Logs to collect
       - ./logs:/var/log/custom_logs:ro
 
       # Persist Filebeat registry (state tracking)
       - filebeat-data:/usr/share/filebeat/data
-
+      - ./custodian-output:/custodian-output:ro
+      - wazuh_data:/var/ossec:ro  # make sure this volume contains the alerts.json file
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./certs/root-ca.pem:/etc/ssl/root-ca.pem:ro
+      - ./certs/filebeat.pem:/etc/ssl/filebeat.pem:ro
+      - ./certs/filebeat.key:/etc/ssl/filebeat.key:ro
     environment:
       - ELASTIC_USER=admin
       - ELASTIC_PASSWORD=SecretPassword
@@ -153,6 +152,18 @@ services:
       - INDEXER_PORT=9200
     networks:
       - wazuh-net
+  
+  custodian:
+    image: cloudcustodian/cloud-custodian:latest
+    container_name: custodian
+    volumes:
+      - ./custodian-policies:/policies
+      - ./custodian-output:/custodian-output
+      - ~/.aws:/root/.aws:ro
+    entrypoint: ["custodian"]
+    command: ["run", "-s", "/custodian-output", "/policies/s3-public-policy.yml"]
+    restart: "no"
+
   nginx:
       image: nginx:1.27-alpine
       container_name: wazuh-nginx

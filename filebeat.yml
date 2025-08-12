@@ -1,13 +1,16 @@
 filebeat.inputs:
   - type: log
+    enabled: true
     paths:
-      - /var/log/nginx/access.log
-      - /var/log/nginx/error.log
+      - /custodian-output/*.json
     fields:
-      service: nginx
+      service: cloud_custodian
     fields_under_root: true
+    json.keys_under_root: true
+    json.add_error_key: true
 
   - type: log
+    enabled: true
     paths:
       - /var/ossec/logs/alerts/alerts.json
     fields:
@@ -23,3 +26,4 @@ output.elasticsearch:
   ssl.certificate_authorities: ["/etc/ssl/root-ca.pem"]
   ssl.certificate: "/etc/ssl/filebeat.pem"
   ssl.key: "/etc/ssl/filebeat.key"
+

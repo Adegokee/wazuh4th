@@ -1,0 +1,13 @@
+policies:
+  - name: s3-public-read-alert
+    resource: s3
+    filters:
+      - type: public-block
+        state: false
+    actions:
+      - type: notify
+        template: default
+        violation_desc: "S3 bucket is publicly readable"
+        transport:
+          type: file
+          output_dir: /custodian-output
